@@ -1,0 +1,86 @@
+#!/bin/sh
+#Colours
+green='\033[92m'
+orange='\e[38;5;166m'
+red='\e[0;31m'
+white='\e[0;37m'
+wandev="wan"
+tn="0"
+checkwait () {
+if [[ "$tn" == "10" ]]
+then
+echo -e "$orange""Waited 10 seconds for wan renew"
+echo -e "$red""Unable to get new ip$white"
+fi
+}
+
+dependency () {
+which macchanger > /dev/null 2>&1
+if [ "$?" -eq "1" ]; then
+      echo -ne "$green""Installing Macchanger ..."
+      opkg update >/dev/null 2>&1 && opkg install macchanger >/dev/null 2>&1
+which macchanger > /dev/null 2>&1
+      if [ "$?" -eq "1" ]; then
+      echo -e "$red""Error"
+      echo -e "$green""Unable to install macchanger with opkg"
+      echo -e "Make Sure you are connected to internet$white"
+      exit 0
+      fi
+else
+echo -e "$green""Macchanger ...$white Found"
+fi 	
+
+which dig > /dev/null 2>&1
+if [ "$?" -eq "1" ]; then
+      echo -ne "$green""Installing Dig ..."
+      opkg update >/dev/null 2>&1 && opkg install bind-dig >/dev/null 2>&1
+which dig > /dev/null 2>&1
+      if [ "$?" -eq "1" ]; then
+      echo -e "$red""Error"
+      echo -e "$green""Unable to install Dig with opkg"
+      echo -e "Make Sure you are connected to internet$white"
+      exit 0
+      fi
+      else
+      echo -e "$green""Dig ...$white Found"
+fi 		
+	
+	}
+waitwan () {
+ifconfig eth0 up
+newip=$(ifconfig $wandev | grep -w "inet addr" | sed -n 1p | awk '{print$2}' | sed 's/addr\://g')
+if [[ "$newip" == "$curip" ]]
+then
+sleep 1
+tn=$((tn+1))
+checkwait
+waitwan
+elif [[ -z "$newip" ]]
+then
+sleep 1
+tn=$((tn+1))
+checkwait
+waitwan
+else
+conf=$(dig +short myip.opendns.com @resolver1.opendns.com | awk '{print$1}')
+if [[ "$conf" == "$newip" ]]
+then
+echo -e "$white""New ip :$green $newip"
+newmac=$(ifconfig $wandev | sed -n 1p | awk '{print$5}')
+echo -e "$white""New Mac :$green $newmac$white"
+else
+echo -e "$white""Wan new ip does not match with opendns"
+echo "Wan ip : $newip"
+echo "Opendns : $conf"
+fi
+fi
+}
+dependency
+curip=$(ifconfig $wandev | grep "inet addr" | sed -n 1p | awk '{print$2}' | sed 's/addr\://g')
+curmac=$(ifconfig $wandev | sed -n 1p | awk '{print$5}')
+echo -e "$white""Current IP :$green $curip"
+echo -e "$white""Current Mac :$green $curmac"
+macchanger -A $wandev  >/dev/null 2>&1
+ifconfig $wandev down
+waitwan
+exit 0
