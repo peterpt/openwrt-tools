@@ -12,6 +12,6 @@ change - This script changes your mac address from your wan port
 
 ## To install :
 - connect to your router via ssh 
-- cd /usr/sbin && wget https://github.com/peterpt/openwrt-tools/raw/main/change $$ chmod +x /usr/sbin/change
+- cd /usr/sbin && wget https://github.com/peterpt/openwrt-tools/raw/main/change && chmod +x /usr/sbin/change
 
 - to change your wan ip log in into your router using ssh and write change in the terminal
