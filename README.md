@@ -9,3 +9,9 @@ change - This script changes your mac address from your wan port
 - this script auto installs the required tools , make sure you are connected to internet
 - when you run it .
 - This script uses macchanger and dig to get a new ip .
+
+## To install :
+- connect to your router via ssh 
+- cd /usr/sbin && wget https://github.com/peterpt/openwrt-tools/raw/main/change $$ chmod +x /usr/sbin/change
+
+- to change your wan ip log in into your router using ssh and write change in the terminal
